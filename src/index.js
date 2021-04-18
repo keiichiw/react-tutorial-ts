@@ -3,8 +3,18 @@ import ReactDOM from 'react-dom';
 import './index.css';
 
 function Square(props) {
+    let style = {};
+    if (props.highlight) {
+        style = {
+            color: "red",
+        };
+    }
     return (
-        <button className="square" onClick={props.onClick}>
+        <button
+          className="square"
+          onClick={props.onClick}
+          style={style}
+        >
           {props.value}
         </button>
     );
@@ -12,32 +22,29 @@ function Square(props) {
 
 class Board extends React.Component {
     renderSquare(i) {
+        let highlight = false;
+        if (this.props.highlightPositions.has(i)) {
+            highlight = true;
+        }
         return <Square
+                 key={i}
+                 highlight={highlight}
                  value={this.props.squares[i]}
                  onClick={ () => this.props.onClick(i) }
                />;
     }
 
     render() {
-        return (
-            <div>
-              <div className="board-row">
-                {this.renderSquare(0)}
-                {this.renderSquare(1)}
-                {this.renderSquare(2)}
-              </div>
-              <div className="board-row">
-                {this.renderSquare(3)}
-                {this.renderSquare(4)}
-                {this.renderSquare(5)}
-              </div>
-              <div className="board-row">
-                {this.renderSquare(6)}
-                {this.renderSquare(7)}
-                {this.renderSquare(8)}
-              </div>
-            </div>
-        );
+        let board = [];
+        for (let i = 0; i < 3; i++) {
+            let row = [];
+            for (let j = 0; j < 3; j++) {
+                row.push(this.renderSquare(i * 3 + j));
+            }
+            const key = `row-${i}`;
+            board.push(<div key={key} className="board-row">{row}</div>);
+        }
+        return board;
     }
 }
 
@@ -51,6 +58,7 @@ class Game extends React.Component {
             }],
             stepNumber: 0,
             xIsNext: true,
+            highlightPositions: new Set(),
         };
     }
 
@@ -69,6 +77,7 @@ class Game extends React.Component {
             }]),
             stepNumber: history.length,
             xIsNext: !this.state.xIsNext,
+            highlightPositions: new Set(),
         });
     }
 
@@ -78,6 +87,22 @@ class Game extends React.Component {
             xIsNext: (step % 2) === 0,
         });
     }
+
+    addHighlight(pos) {
+        const highlightPositions = new Set(this.state.highlightPositions);
+        this.setState({
+            highlightPositions: highlightPositions.add(pos)
+        });
+    }
+
+    removeHighlight(pos) {
+        const highlightPositions = new Set(this.state.highlightPositions);
+        highlightPositions.delete(pos);
+        this.setState({
+            highlightPositions: highlightPositions
+        });
+    }
+
 
     render() {
         const history = this.state.history;
@@ -95,7 +120,13 @@ class Game extends React.Component {
             }
             return (
                 <li key={move}>
-                  <button onClick={() => this.jumpTo(move)}>{desc}</button>
+                  <button
+                    onClick={() => this.jumpTo(move)}
+                    onMouseOver={() => this.addHighlight(step.pos)}
+                    onMouseOut={() => this.removeHighlight(step.pos)}
+                  >
+                    {desc}
+                  </button>
                 </li>
             );
         });
@@ -112,6 +143,7 @@ class Game extends React.Component {
               <div className="game-board">
                 <Board
                   squares={current.squares}
+                  highlightPositions={this.state.highlightPositions}
                   onClick={ (i) => this.handleClick(i) }
                 />
               </div>
