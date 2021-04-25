@@ -5,7 +5,7 @@ The application is available on [GitHub pages](https://keiichiw.github.io/react-
 
 ## Development
 
-```
+```shell
 $ git clone git@github.com:keiichiw/react-tutorial-ts.git
 $ cd react-tutorial-ts
 $ npm install
