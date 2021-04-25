@@ -32,6 +32,9 @@ jobs:
           only_changed: True
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install
+        run:
+          npm install
       - name: Deploy the app
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
