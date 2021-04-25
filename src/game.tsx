@@ -109,7 +109,7 @@ const Game = withStyles(styles)(
           const col = (step.pos % 3) + 1;
           desc = `Move #${move}: (${row}, ${col})`;
         } else {
-          desc = "Initial state.";
+          desc = "Back to the initial state.";
         }
         return (
           <ListItem key={move} button dense divider>
