@@ -32,7 +32,7 @@ type SquareProps = {
 };
 
 function Square(props: SquareProps) {
-    const classes = useStyles();
+  const classes = useStyles();
 
   return (
     <div>
