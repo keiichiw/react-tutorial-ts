@@ -1,8 +1,30 @@
 import React from "react";
 import { Typography, List, ListItem, ListItemText } from "@material-ui/core";
+import { withStyles, createStyles } from "@material-ui/core/styles";
+import { Theme } from "@material-ui/core/styles/createMuiTheme";
 
 import Board from "./board";
-type GameProps = {};
+
+const styles = (theme: Theme) =>
+  createStyles({
+    root: {
+      "& h6": {
+        margin: "12px",
+      },
+    },
+    gameBoard: {
+      margin: "20px",
+    },
+    history: {},
+  });
+
+type GameProps = {
+  classes: {
+    root: string;
+    gameBoard: string;
+    history: string;
+  };
+};
 
 type HistoryElem = {
   pos?: number;
@@ -16,116 +38,120 @@ type GameState = {
   selectedMove: number | null;
 };
 
-class Game extends React.Component<GameProps, GameState> {
-  constructor(props: GameProps) {
-    super(props);
-    this.state = {
-      history: [
-        {
-          squares: Array(9).fill(null),
-        },
-      ],
-      stepNumber: 0,
-      xIsNext: true,
-      selectedMove: null,
-    };
-  }
-
-  handleClick(i: number) {
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    const current = history[history.length - 1];
-    const squares = current.squares.slice();
-    const result = calculateWinner(squares);
-    if (result.gameEnd || squares[i]) {
-      return;
+const Game = withStyles(styles)(
+  class extends React.Component<GameProps, GameState> {
+    constructor(props: GameProps) {
+      super(props);
+      this.state = {
+        history: [
+          {
+            squares: Array(9).fill(null),
+          },
+        ],
+        stepNumber: 0,
+        xIsNext: true,
+        selectedMove: null,
+      };
     }
-    squares[i] = this.state.xIsNext ? "X" : "O";
-    this.setState({
-      history: history.concat([
-        {
-          pos: i,
-          squares: squares,
-        },
-      ]),
-      stepNumber: history.length,
-      xIsNext: !this.state.xIsNext,
-    });
-  }
 
-  jumpTo(step: number) {
-    this.setState({
-      stepNumber: step,
-      xIsNext: step % 2 === 0,
-    });
-  }
-
-  selectMove(pos: number | undefined) {
-    if (pos) {
+    handleClick(i: number) {
+      const history = this.state.history.slice(0, this.state.stepNumber + 1);
+      const current = history[history.length - 1];
+      const squares = current.squares.slice();
+      const result = calculateWinner(squares);
+      if (result.gameEnd || squares[i]) {
+        return;
+      }
+      squares[i] = this.state.xIsNext ? "X" : "O";
       this.setState({
-        selectedMove: pos,
+        history: history.concat([
+          {
+            pos: i,
+            squares: squares,
+          },
+        ]),
+        stepNumber: history.length,
+        xIsNext: !this.state.xIsNext,
       });
     }
-  }
 
-  deselectMove() {
-    this.setState({
-      selectedMove: null,
-    });
-  }
-
-  render() {
-    const history = this.state.history;
-    const current = history[this.state.stepNumber];
-    const result = calculateWinner(current.squares);
-
-    const moves = history.map((step, move) => {
-      let desc;
-      if (step.pos) {
-        const row = Math.floor(step.pos / 3) + 1;
-        const col = (step.pos % 3) + 1;
-        desc = `Go to move #${move}: (row=${row}, col=${col})`;
-      } else {
-        desc = "Go to game start";
-      }
-      return (
-        <ListItem key={move} button>
-          <ListItemText
-            onClick={() => this.jumpTo(move)}
-            onMouseOver={() => this.selectMove(step.pos)}
-            onMouseOut={() => this.deselectMove()}
-            primary={desc}
-          />
-        </ListItem>
-      );
-    });
-
-    let status;
-    if (result.winner) {
-      status = "Winner: " + result.winner;
-    } else if (result.gameEnd) {
-      status = "Draw!";
-    } else {
-      status = "Next player: " + (this.state.xIsNext ? "X" : "O");
+    jumpTo(step: number) {
+      this.setState({
+        stepNumber: step,
+        xIsNext: step % 2 === 0,
+      });
     }
 
-    return (
-      <div className="game">
-        <Typography variant="h6">{status}</Typography>
-        <div className="game-board">
-          <Board
-            squares={current.squares}
-            selectedMove={this.state.selectedMove}
-            winningLine={result.winningLine}
-            onClick={(i) => this.handleClick(i)}
-          />
+    selectMove(pos: number | undefined) {
+      if (pos) {
+        this.setState({
+          selectedMove: pos,
+        });
+      }
+    }
+
+    deselectMove() {
+      this.setState({
+        selectedMove: null,
+      });
+    }
+
+    render() {
+      const { classes } = this.props;
+      const history = this.state.history;
+      const current = history[this.state.stepNumber];
+      const result = calculateWinner(current.squares);
+
+      const moves = history.map((step, move) => {
+        let desc;
+        if (step.pos !== undefined) {
+          const row = Math.floor(step.pos / 3) + 1;
+          const col = (step.pos % 3) + 1;
+          desc = `Move #${move}: (${row}, ${col})`;
+        } else {
+          desc = "Initial state.";
+        }
+        return (
+          <ListItem key={move} button dense divider>
+            <ListItemText
+              onClick={() => this.jumpTo(move)}
+              onMouseOver={() => this.selectMove(step.pos)}
+              onMouseOut={() => this.deselectMove()}
+              primary={desc}
+            />
+          </ListItem>
+        );
+      });
+
+      let status;
+      if (result.winner) {
+        status = "Winner: " + result.winner;
+      } else if (result.gameEnd) {
+        status = "Draw!";
+      } else {
+        status = "Next player: " + (this.state.xIsNext ? "X" : "O");
+      }
+
+      return (
+        <div className={classes.root}>
+          <Typography variant="h6">{status}</Typography>
+          <div className={classes.gameBoard}>
+            <Board
+              squares={current.squares}
+              selectedMove={this.state.selectedMove}
+              winningLine={result.winningLine}
+              onClick={(i) => this.handleClick(i)}
+            />
+          </div>
+          <Typography variant="h6">History:</Typography>
+          <div className={classes.history}>
+            <List>{moves}</List>
+          </div>
         </div>
-        <div className="history">
-          <List>{moves}</List>
-        </div>
-      </div>
-    );
+      );
+    }
   }
-}
+);
 
 function calculateWinner(squares: Array<string>) {
   const lines = [
@@ -158,4 +184,4 @@ function calculateWinner(squares: Array<string>) {
   };
 }
 
-export default Game;
+export default withStyles(styles)(Game);

@@ -1,7 +1,6 @@
 import ReactDOM from "react-dom";
 import { AppBar, Toolbar, IconButton, Typography } from "@material-ui/core";
 
-import "./index.css";
 import Game from "./game";
 
 function Main() {
